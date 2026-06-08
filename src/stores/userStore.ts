@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { User, Chat, Message, Order, Notification } from '../types'
+import type { User, Chat, ChatMessage, Order, Notification } from '../types'
 import { users, chats as initialChats, generateAvatar } from '../data/mockData'
 
 export const useUserStore = defineStore('user', () => {
@@ -18,7 +18,7 @@ export const useUserStore = defineStore('user', () => {
 
   const usersList = ref<User[]>(users)
   const chats = ref<Chat[]>(initialChats)
-  const messages = ref<Message[]>([])
+  const messages = ref<ChatMessage[]>([])
   const notifications = ref<Notification[]>([
     { id: '1', title: '系统公告', content: '平台将于今晚23:00进行系统维护', type: 'system', timestamp: new Date().toISOString(), isRead: false },
     { id: '2', title: '交易提醒', content: '您发布的商品有人想要购买', type: 'trade', timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), isRead: false },
@@ -33,7 +33,7 @@ export const useUserStore = defineStore('user', () => {
   const favorites = ref<string[]>(['3', '7', '12', '18'])
 
   const unreadMessagesCount = computed(() => {
-    return chats.value.reduce((sum, chat) => sum + chat.unread, 0)
+    return chats.value.reduce((sum, chat) => sum + chat.unreadCount, 0)
   })
 
   const unreadNotificationsCount = computed(() => {
@@ -79,16 +79,14 @@ export const useUserStore = defineStore('user', () => {
     const chat = chats.value.find(c => c.id === chatId)
     if (chat) {
       chat.lastMessage = content
-      chat.timestamp = new Date().toISOString()
+      chat.lastTime = new Date().toISOString()
     }
     
     messages.value.push({
       id: `msg-${Date.now()}`,
       senderId: currentUser.value.id,
       content,
-      type: 'text',
-      timestamp: new Date().toISOString(),
-      isRead: false
+      time: new Date().toISOString()
     })
   }
 

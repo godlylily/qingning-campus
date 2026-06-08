@@ -30,7 +30,7 @@
         >
           <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
             <span class="text-sm text-gray-500 dark:text-gray-400">订单号: {{ order.id }}</span>
-            <span :class="getStatusColor(order.status)" class="text-sm font-medium">{{ getStatusText(order.status) }}</span>
+            <span :class="['text-sm font-medium', getStatusColor(order.status)]">{{ getStatusText(order.status) }}</span>
           </div>
           
           <div class="p-4">
