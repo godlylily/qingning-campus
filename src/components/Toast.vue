@@ -1,47 +1,49 @@
 <template>
-  <Transition name="toast">
-    <div 
-      v-if="visible" 
-      class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[100] flex items-center gap-3 px-5 py-3 bg-gray-900/90 dark:bg-gray-800/95 backdrop-blur-md rounded-full shadow-2xl"
-    >
-      <component :is="icon" :class="['w-5 h-5', iconColor]" />
-      <span class="text-white dark:text-gray-200 font-medium">{{ message }}</span>
-    </div>
-  </Transition>
+  <Teleport to="body">
+    <Transition name="toast">
+      <div 
+        v-if="visible"
+        class="fixed top-20 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg"
+        :class="[
+          type === 'success' ? 'bg-green-500 text-white' : '',
+          type === 'error' ? 'bg-red-500 text-white' : '',
+          type === 'warning' ? 'bg-orange-500 text-white' : '',
+          type === 'info' ? 'bg-blue-500 text-white' : '',
+        ]"
+      >
+        <CheckCircle v-if="type === 'success'" :size="18" />
+        <XCircle v-else-if="type === 'error'" :size="18" />
+        <AlertTriangle v-else-if="type === 'warning'" :size="18" />
+        <Info v-else :size="18" />
+        <span class="text-sm font-medium">{{ message }}</span>
+      </div>
+    </Transition>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { CheckCircle, AlertCircle, Info, XCircle } from 'lucide-vue-next'
-
-defineProps<{
-  visible: boolean
-  message: string
-  type?: 'success' | 'error' | 'warning' | 'info'
-}>()
+import { ref, watch } from 'vue'
+import { CheckCircle, XCircle, AlertTriangle, Info } from 'lucide-vue-next'
 
 const props = defineProps<{
-  visible: boolean
   message: string
   type?: 'success' | 'error' | 'warning' | 'info'
+  duration?: number
 }>()
 
-const icons = {
-  success: CheckCircle,
-  error: XCircle,
-  warning: AlertCircle,
-  info: Info,
-}
+const emit = defineEmits(['close'])
 
-const colors = {
-  success: 'text-green-400',
-  error: 'text-red-400',
-  warning: 'text-yellow-400',
-  info: 'text-blue-400',
-}
+const visible = ref(false)
 
-const icon = computed(() => icons[props.type || 'info'])
-const iconColor = computed(() => colors[props.type || 'info'])
+watch(() => props.message, (newMessage) => {
+  if (newMessage) {
+    visible.value = true
+    setTimeout(() => {
+      visible.value = false
+      emit('close')
+    }, props.duration || 2000)
+  }
+})
 </script>
 
 <style scoped>
@@ -50,15 +52,13 @@ const iconColor = computed(() => colors[props.type || 'info'])
   transition: all 0.3s ease;
 }
 
-.toast-enter-from,
-.toast-leave-to {
+.toast-enter-from {
   opacity: 0;
-  transform: translate(-50%, -50%) scale(0.9);
+  transform: translate(-50%, -20px);
 }
 
-.toast-enter-to,
-.toast-leave-from {
-  opacity: 1;
-  transform: translate(-50%, -50%) scale(1);
+.toast-leave-to {
+  opacity: 0;
+  transform: translate(-50%, -20px);
 }
 </style>
