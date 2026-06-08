@@ -1,143 +1,164 @@
 <template>
-  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20">
-    <header class="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md shadow-sm">
-      <div class="max-w-lg mx-auto px-4 py-3 flex items-center gap-3">
-        <button class="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" @click="goBack">
-          <ArrowLeft class="w-5 h-5 text-gray-700 dark:text-gray-300" />
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900 pb-24">
+    <div class="sticky top-0 z-50 bg-gradient-to-r from-green-500 to-emerald-500">
+      <div class="flex items-center px-4 py-4">
+        <button @click="goBack" class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+          <ArrowLeft :size="20" class="text-white" />
         </button>
-        <h1 class="font-bold text-lg text-gray-800 dark:text-gray-200">我的订单</h1>
+        <h1 class="font-bold text-white text-lg ml-4">我的订单</h1>
       </div>
-    </header>
+    </div>
 
-    <main class="pt-16">
-      <div class="flex border-b border-gray-200 dark:border-gray-700">
+    <div class="px-4 py-4">
+      <div class="flex gap-2 mb-4 overflow-x-auto pb-2">
         <button 
           v-for="tab in tabs" 
           :key="tab.key"
-          class="flex-1 py-3 text-sm font-medium transition-colors relative" 
-          :class="activeTab === tab.key ? 'text-primary-500' : 'text-gray-500 dark:text-gray-400'"
-          @click="activeTab = tab.key"
+          @click="currentTab = tab.key"
+          :class="currentTab === tab.key ? 'bg-green-500 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300'"
+          class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap"
         >
           {{ tab.label }}
-          <span 
-            v-if="activeTab === tab.key" 
-            class="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary-500 rounded-full"
-          ></span>
         </button>
       </div>
 
-      <div class="px-4 py-4">
-        <div v-if="orders.length > 0" class="space-y-4">
-          <div 
-            v-for="order in orders" 
-            :key="order.id"
-            class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden"
-          >
-            <div class="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-700/50">
-              <span class="text-sm text-gray-500 dark:text-gray-400">订单号：{{ order.id }}</span>
-              <span :class="getStatusClass(order.status)">{{ order.status }}</span>
-            </div>
-            <div class="flex gap-3 p-4">
-              <img :src="order.product.images[0]" :alt="order.product.title" class="w-20 h-20 rounded-lg object-cover" />
-              <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{{ order.product.title }}</p>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">成色：{{ order.product.condition }}</p>
-                <div class="flex items-center justify-between mt-2">
-                  <span class="text-primary-500 font-bold">¥{{ order.price }}</span>
-                  <span class="text-xs text-gray-400">x{{ order.quantity }}</span>
+      <div class="space-y-4">
+        <div 
+          v-for="order in filteredOrders" 
+          :key="order.id"
+          class="bg-white dark:bg-gray-800 rounded-2xl shadow-card overflow-hidden"
+        >
+          <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+            <span class="text-sm text-gray-500 dark:text-gray-400">订单号: {{ order.id }}</span>
+            <span :class="getStatusColor(order.status)" class="text-sm font-medium">{{ getStatusText(order.status) }}</span>
+          </div>
+          
+          <div class="p-4">
+            <div class="flex gap-3">
+              <img :src="order.image" :alt="order.productName" class="w-20 h-20 rounded-xl object-cover" />
+              <div class="flex-1">
+                <div class="font-medium text-gray-900 dark:text-white mb-1">{{ order.productName }}</div>
+                <div class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ order.seller }}</div>
+                <div class="flex items-center justify-between">
+                  <span class="text-lg font-bold text-green-500">¥ {{ order.price }}</span>
+                  <span class="text-sm text-gray-500 dark:text-gray-400">x1</span>
                 </div>
               </div>
             </div>
-            <div class="flex justify-end gap-2 px-4 pb-4">
-              <button 
-                v-if="order.status === '待付款'"
-                class="px-4 py-2 bg-primary-500 text-white rounded-lg text-sm font-medium hover:bg-primary-600 transition-colors"
-              >
-                立即付款
-              </button>
-              <button 
-                v-if="order.status === '待发货'"
-                class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-              >
-                联系卖家
-              </button>
-              <button 
-                v-if="order.status === '待收货'"
-                class="px-4 py-2 bg-primary-500 text-white rounded-lg text-sm font-medium hover:bg-primary-600 transition-colors"
-              >
-                确认收货
-              </button>
-              <button 
-                v-if="order.status === '已完成'"
-                class="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded-lg text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-              >
-                查看评价
-              </button>
-            </div>
           </div>
-        </div>
-        <div v-else class="flex flex-col items-center justify-center py-20">
-          <div class="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
-            <Package class="w-10 h-10 text-gray-400" />
+
+          <div class="px-4 py-3 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-2">
+            <button class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 rounded-lg text-sm">
+              查看详情
+            </button>
+            <button 
+              v-if="order.status === 'pending'"
+              class="px-4 py-2 bg-green-500 text-white rounded-lg text-sm"
+            >
+              确认收货
+            </button>
+            <button 
+              v-if="order.status === 'completed'"
+              class="px-4 py-2 border border-green-500 text-green-500 rounded-lg text-sm"
+            >
+              再次购买
+            </button>
           </div>
-          <p class="text-gray-500 dark:text-gray-400">暂无订单</p>
-          <p class="text-sm text-gray-400 mt-1">去逛逛，发现心仪的商品吧</p>
         </div>
       </div>
-    </main>
+    </div>
 
-    <BottomTabBar :active="'profile'" />
+    <BottomTabBar />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import {
-  ArrowLeft,
-  Package,
-} from 'lucide-vue-next'
+import { ArrowLeft } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
+import { p } from '../data/mockData'
 import BottomTabBar from '../components/BottomTabBar.vue'
-import { products } from '../data/mockData'
 
-const activeTab = ref('all')
+const router = useRouter()
+const currentTab = ref('all')
 
 const tabs = [
   { key: 'all', label: '全部' },
   { key: 'pending', label: '待付款' },
-  { key: 'shipped', label: '待发货' },
-  { key: 'received', label: '待收货' },
+  { key: 'paid', label: '待发货' },
+  { key: 'shipped', label: '待收货' },
   { key: 'completed', label: '已完成' },
 ]
 
 const orders = ref([
-  { id: '20240115001', product: products[0], price: 128, quantity: 1, status: '待付款' },
-  { id: '20240115002', product: products[1], price: 2599, quantity: 1, status: '待发货' },
-  { id: '20240115003', product: products[2], price: 68, quantity: 1, status: '待收货' },
-  { id: '20240115004', product: products[3], price: 199, quantity: 1, status: '已完成' },
+  {
+    id: '20240115001',
+    productName: '考研英语真题全套',
+    image: p('考研资料'),
+    seller: '上岸学姐',
+    price: '89.00',
+    status: 'shipped',
+    date: '2024-01-15'
+  },
+  {
+    id: '20240114002',
+    productName: '无线蓝牙耳机',
+    image: p('耳机'),
+    seller: '数码达人',
+    price: '159.00',
+    status: 'completed',
+    date: '2024-01-14'
+  },
+  {
+    id: '20240113003',
+    productName: '台灯一个',
+    image: p('台灯'),
+    seller: '热心同学',
+    price: '45.00',
+    status: 'pending',
+    date: '2024-01-13'
+  },
+  {
+    id: '20240112004',
+    productName: '笔记本电脑包',
+    image: p('包包'),
+    seller: '大四学长',
+    price: '68.00',
+    status: 'paid',
+    date: '2024-01-12'
+  },
 ])
 
 const filteredOrders = computed(() => {
-  if (activeTab.value === 'all') return orders.value
-  const statusMap: Record<string, string> = {
-    pending: '待付款',
-    shipped: '待发货',
-    received: '待收货',
-    completed: '已完成',
+  if (currentTab.value === 'all') {
+    return orders.value
   }
-  return orders.value.filter(order => order.status === statusMap[activeTab.value])
+  return orders.value.filter(order => order.status === currentTab.value)
 })
 
-const getStatusClass = (status: string) => {
-  const classMap: Record<string, string> = {
-    '待付款': 'text-orange-500',
-    '待发货': 'text-blue-500',
-    '待收货': 'text-green-500',
-    '已完成': 'text-gray-400',
+const getStatusText = (status: string) => {
+  const statusMap: Record<string, string> = {
+    pending: '待付款',
+    paid: '待发货',
+    shipped: '待收货',
+    completed: '已完成',
+    cancelled: '已取消'
   }
-  return classMap[status] || 'text-gray-400'
+  return statusMap[status] || status
+}
+
+const getStatusColor = (status: string) => {
+  const colorMap: Record<string, string> = {
+    pending: 'text-orange-500',
+    paid: 'text-blue-500',
+    shipped: 'text-green-500',
+    completed: 'text-gray-500',
+    cancelled: 'text-red-500'
+  }
+  return colorMap[status] || 'text-gray-500'
 }
 
 const goBack = () => {
-  window.history.back()
+  router.back()
 }
 </script>
