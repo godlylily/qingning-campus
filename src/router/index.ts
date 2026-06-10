@@ -23,6 +23,7 @@ const routes = [
   { path: '/', name: 'Home', component: HomeView },
   { path: '/product/:id', name: 'ProductDetail', component: ProductDetailView },
   { path: '/publish', name: 'Publish', component: PublishView },
+  { path: '/chat', redirect: '/chats' },
   { path: '/chats', name: 'ChatList', component: ChatListView },
   { path: '/chat/:id', name: 'ChatDetail', component: ChatDetailView },
   { path: '/profile', name: 'Profile', component: ProfileView },
@@ -57,24 +58,7 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  const appEl = document.getElementById('app')
-  if (appEl) {
-    appEl.classList.add('page-transition-out')
-    setTimeout(() => {
-      next()
-      setTimeout(() => {
-        if (appEl) {
-          appEl.classList.remove('page-transition-out')
-          appEl.classList.add('page-transition-in')
-          setTimeout(() => {
-            appEl.classList.remove('page-transition-in')
-          }, 300)
-        }
-      }, 50)
-    }, 200)
-  } else {
-    next()
-  }
+  next()
 })
 
 export default router
